@@ -17,7 +17,7 @@ if len(sys.argv) > 3:
 IP_SRC = None
 SRC_PORT = random.randint(1024,65535)
 data = list()
-FileName = "opACK." + congestion_control + ".npy"
+FileName = "npy/op." + congestion_control + ".npy"
 MTU = 1472
 WAIT_TIME = 0.05
 stop = False

@@ -3,7 +3,7 @@
 import SimpleHTTPServer
 import SocketServer
 
-class WebHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class CS144Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     # Disable logging DNS lookups
     def address_string(self):
@@ -11,6 +11,7 @@ class WebHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 PORT = 8888
-httpd = SocketServer.TCPServer(("", PORT), WebHandler)
-print "Server: httpd serving at port", PORT
+Handler = CS144Handler
+httpd = SocketServer.TCPServer(("", PORT), Handler)
+print "Server1: httpd serving at port", PORT
 httpd.serve_forever()
