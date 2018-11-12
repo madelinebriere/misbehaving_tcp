@@ -1,48 +1,47 @@
 #!/usr/bin/python
 
-import matplotlib; matplotlib.use('Agg')
-
+import matplotlib; 
 import matplotlib.pyplot as plt
 import numpy as np
 
 i=0
 
-for cong_control in ['cubic', 'reno', 'vegas']:
-	i += 1
-	DupFileName = "dupACK." + cong_control + ".npy"
-	SplitFileName = "splitACK." + cong_control + ".npy"
-	NormalFileName = "normal." + cong_control + ".npy"
-	OpFileName = "opACK." + cong_control + ".npy"
+# TODO: Make these plots prettier.
+for control in ['cubic', 'reno']:
 
-	dupACKs = np.load(DupFileName)
-	splitACKs = np.load(SplitFileName)
-	normalACKs = np.load(NormalFileName)
-	opACKs = np.load(OpFileName)
+	normal = np.load("normal." + control + ".npy")
 
+	dupACKs = np.load("dup." + control + ".npy")
 	plt.figure(i)
-	plt.subplot(311)
-	plt.title("Duplicate ACKs (%s)" % cong_control)
-	plt.scatter(*zip(dupACKs), label="Duplicate ACKs")
-	plt.scatter(*zip(normalACKs), label="Normal")
-	plt.xlabel("time (s)")
+	plt.title("DupACKs (%s)" % cong_control)
+	plt.scatter(*zip(dup), label="DupACKs")
+	plt.scatter(*zip(normal), label="Normal")
+	plt.xlabel("Time (s)")
 	plt.ylabel("Seq Number")
 	plt.legend(loc="lower right")
-
-	plt.subplot(312)
-	plt.title("Split ACKs (%s)" % cong_control)
-	plt.scatter(*zip(splitACKs), label="Split ACKs")
-	plt.scatter(*zip(normalACKs), label="Normal")
-	plt.xlabel("time (s)")
-	plt.ylabel("Seq Number")
-	plt.legend(loc="lower right")
-
-	plt.subplot(313)
-	plt.title("Optimistic ACKs (%s)" % cong_control)
-	plt.scatter(*zip(opACKs), label="Optimistic ACKs")
-	plt.scatter(*zip(normalACKs), label="Normal")
-	plt.xlabel("time (s)")
-	plt.ylabel("Seq Number")
-	plt.legend(loc="lower right")
-
 	plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
-	plt.savefig("data.%s.png" % cong_control)
+	plt.savefig("dup.%s.png" % (control))
+
+	split = np.load("split." + control + ".npy")
+	i=i+1
+	plt.figure(i)
+	plt.title("SplitACKs (%s)" % control)
+	plt.scatter(*zip(split), label="SplitACKs")
+	plt.scatter(*zip(normal), label="Normal")
+	plt.xlabel("Time (s)")
+	plt.ylabel("Sequence Number")
+	plt.legend(loc="lower right")
+	plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+	plt.savefig("split.%s.png" % (control))
+
+	op = np.load("op." + control + ".npy")
+	i=i+1
+	plt.figure(i)
+	plt.title("OpACKs (%s)" % cong_control)
+	plt.scatter(*zip(op), label="OpACKs")
+	plt.scatter(*zip(normal), label="Normal")
+	plt.xlabel("Time (s)")
+	plt.ylabel("Sequence Number")
+	plt.legend(loc="lower right")
+	plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+	plt.savefig("op.%s.png" % (control))
