@@ -12,10 +12,12 @@ opACKs = np.load("npy/op.npy")
 
 plt.figure(1)
 plt.title("Duplicate ACKs")
-plt.scatter(*zip(dupACKs), label="Duplicate ACKs", color='purple',
-		marker="1")
-plt.scatter(*zip(normalACKs), label="Normal", color='green', 
-		marker="1")
+plt.scatter(dupACKs[0][:-3], dupACKs[1][:-3], 
+		label="Duplicate ACKs", color='purple', 
+		marker="+")
+plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+		label="Normal", color='green', 
+		marker="+")
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
@@ -24,10 +26,12 @@ plt.savefig("output/dup.png")
 
 plt.figure(2)
 plt.title("Split ACKs")
-plt.scatter(*zip(splitACKs), label="Split ACKs", color='magenta',
-		marker="1")
-plt.scatter(*zip(normalACKs), label="Normal", color='green',
-		marker="1")
+plt.scatter(splitACKs[0][:-3], splitACKs[1][:-3],
+ 		label="Split ACKs", color='magenta',
+		marker="+")
+plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+		label="Normal", color='green',
+		marker="+")
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
@@ -36,10 +40,12 @@ plt.savefig("output/split.png")
 
 plt.figure(3)
 plt.title("Optimistic ACKs")
-plt.scatter(*zip(opACKs), label="Optimistic ACKs", color='blue',
-		marker="1")
-plt.scatter(*zip(normalACKs), label="Normal", color='green', 
-		marker="1")
+plt.scatter(opACKs[0][:-3], opACKs[1][:-3],
+		 label="Optimistic ACKs", color='blue',
+		 marker="+")
+plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+		label="Normal", color='green', 
+		marker="+")
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
