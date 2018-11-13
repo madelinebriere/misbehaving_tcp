@@ -9,5 +9,4 @@ sudo apt-get -y install mininet
 sudo apt-get -y install openvswitch-testcontroller
 sudo cp /usr/bin/ovs-testcontroller /usr/bin/ovs-controller
 
-sudo modprobe tcp_vegas
-sudo modprobe tcp_cubic
+sudo sysctl -w net.ipv4.tcp_congestion_control=reno
