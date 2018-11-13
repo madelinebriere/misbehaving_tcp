@@ -49,10 +49,10 @@ class NodeGenerator(Topo):
     # - RTT
     # - BW
     # - Queue size
-    self.addLink(server, switch, bw=500, delay="50ms",
-    	loss = 0, max_queue_size = 256);
-    self.addLink(client, switch, bw=500, delay="50ms",
-    	loss = 0, max_queue_size = 256);
+    self.addLink(server, switch, bw=100, delay="28ms",
+    	loss = 0, max_queue_size = 128);
+    self.addLink(client, switch, bw=100, delay="28ms",
+    	loss = 0, max_queue_size = 128);
     return
 
 
