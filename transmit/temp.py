@@ -33,7 +33,7 @@ request = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
 print "Sending Request..."
 socket.send(Ether() / request)
 
-def addACKs(pkt):
+def normal(pkt):
   global DST_PORT, IP_DST, data, socket
   if IP not in pkt:
     return
@@ -59,8 +59,8 @@ def addACKs(pkt):
              seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + tcp_seg_len), flags='A')
   socket.send(Ether() / ack_pkt)
 
-print("Sniffing......")
-sniff(iface="client-eth0", prn=addACKs, filter="tcp and ip", timeout=4)
+if sys.argv[1] == "normal" :
+    sniff(iface="client-eth0", prn=normal, filter="tcp and ip", timeout=4)
 numbas = np.asarray(zip(*data))
 sp.call(["rm", "-f", FileName], shell=True)
 np.save(FileName, numbas)
