@@ -12,10 +12,10 @@ opACKs = np.load("npy/op.npy")
 
 plt.figure(1)
 plt.title("Duplicate ACKs")
-plt.scatter(dupACKs[0][:-3], dupACKs[1][:-3], 
+plt.scatter(dupACKs[0][:-5], dupACKs[1][:-5], 
 		label="Duplicate ACKs", color='purple', 
 		marker="+")
-plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green', 
 		marker="+")
 plt.xlabel("Time (s)")
@@ -26,10 +26,10 @@ plt.savefig("output/dup.png")
 
 plt.figure(2)
 plt.title("Split ACKs")
-plt.scatter(splitACKs[0][:-3], splitACKs[1][:-3],
+plt.scatter(splitACKs[0][:-5], splitACKs[1][:-5],
  		label="Split ACKs", color='magenta',
 		marker="+")
-plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green',
 		marker="+")
 plt.xlabel("Time (s)")
@@ -40,10 +40,10 @@ plt.savefig("output/split.png")
 
 plt.figure(3)
 plt.title("Optimistic ACKs")
-plt.scatter(opACKs[0][:-3], opACKs[1][:-3],
+plt.scatter(opACKs[0][:-5], opACKs[1][:-5],
 		 label="Optimistic ACKs", color='blue',
 		 marker="+")
-plt.scatter(normalACKs[0][:-3], normalACKs[1][:-3], 
+plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green', 
 		marker="+")
 plt.xlabel("Time (s)")

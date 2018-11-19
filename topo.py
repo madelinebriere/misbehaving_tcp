@@ -19,13 +19,13 @@ parser = argparse.ArgumentParser(description="Run script")
 # 2. DupACKing attack from recevier
 # 3. OptACKing attack from receiver
 # 4. SplitACKing attack from receiver
-parser.add_argument("--script", 
+parser.add_argument("--attack", 
 	type=str, 
-	choices = ["transmit/normal.py", 
-	"transmit/dup.py", 
-	"transmit/op.py", 
-	"transmit/split.py"],
-	default = "transmit/normal.py")
+	choices = ["normal",
+    "split",
+    "dup",
+    "op"],
+	default = "normal")
 
 args = parser.parse_args()
 
@@ -41,10 +41,10 @@ class NodeGenerator(Topo):
     # - RTT
     # - BW
     # - Queue size
-    self.addLink(server, switch, bw=200, delay="36ms",
-    	loss = 0, max_queue_size = 256);
-    self.addLink(client, switch, bw=200, delay="36ms",
-    	loss = 0, max_queue_size = 256);
+    self.addLink(server, switch, bw=200, delay="40ms",
+    	loss = 0, max_queue_size = 256)
+    self.addLink(client, switch, bw=200, delay="40ms",
+    	loss = 0, max_queue_size = 256)
     return
 
 
@@ -68,7 +68,8 @@ def launchNet():
 
   # Launch webserver to generate traffic
   server.popen("python webserver.py", shell=True)
-  client.popen("python %s %s %s" % (args.script, '10.0.0.1', 8888), shell=True).wait()
+  #client.popen("python %s %s %s" % (args.script, '10.0.0.1', 8888), shell=True).wait()
+  client.popen("python transmit/transmit.py %s %s %d" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
 
   # Kill webserver
   server.popen("pgrep -f webserver.py | xargs kill -9", shell=True).wait() 
