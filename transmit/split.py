@@ -56,7 +56,7 @@ def addACKs(pkt):
   if pkt.flags & FIN:
     add = 1
 
-  nextACK_num = pkt[TCP].seq + tcp_seg_len + add
+  nextACK_num = pkt[TCP].seq + tcp_seg_len
 
   ACK_nums = list()
   if ACK_delta != 0:

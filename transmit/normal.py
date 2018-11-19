@@ -58,7 +58,7 @@ def addACKs(pkt):
     add = 1
 
   ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + tcp_seg_len + add), flags='A')
+             seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + tcp_seg_len), flags='A')
   socket.send(Ether() / ack_pkt)
 
 print("Sniffing......")

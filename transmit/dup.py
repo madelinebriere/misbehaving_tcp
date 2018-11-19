@@ -60,7 +60,7 @@ def addACKs(pkt):
     add = 1
     cnt = 1
 
-  nextACK_num = (pkt[TCP].seq + tcp_seg_len + add)
+  nextACK_num = (pkt[TCP].seq + tcp_seg_len)
 
   if maxACK > nextACK_num:
     return
