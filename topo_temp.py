@@ -19,14 +19,6 @@ parser = argparse.ArgumentParser(description="Run script")
 # 2. DupACKing attack from recevier
 # 3. OptACKing attack from receiver
 # 4. SplitACKing attack from receiver
-parser.add_argument("--script", 
-	type=str, 
-	choices = ["transmit/normal.py", 
-	"transmit/dup.py", 
-	"transmit/op.py", 
-	"transmit/split.py"],
-	default = "transmit/normal.py")
-    
 parser.add_argument("--attack", 
 	type=str, 
 	choices = ["normal",
@@ -79,7 +71,7 @@ def launchNet():
   # Launch webserver to generate traffic
   server.popen("python webserver.py", shell=True)
   #client.popen("python %s %s %s" % (args.script, '10.0.0.1', 8888), shell=True).wait()
-  client.popen("python transmit/temp.py --attack %s --ip %s --port %s" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
+  client.popen("python transmit/temp.py %s %s %s" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
 
   # Kill webserver
   server.popen("pgrep -f webserver.py | xargs kill -9", shell=True).wait() 
