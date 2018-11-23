@@ -69,7 +69,7 @@ def launchNet():
   # Launch webserver to generate traffic
   server.popen("python webserver.py", shell=True)
   #client.popen("python %s %s %s" % (args.script, '10.0.0.1', 8888), shell=True).wait()
-  client.popen("python transmit/transmit.py %s %s %d" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
+  client.popen("python transmit.py %s %s %d" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
 
   # Kill webserver
   server.popen("pgrep -f webserver.py | xargs kill -9", shell=True).wait() 
