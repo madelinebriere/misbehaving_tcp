@@ -113,8 +113,9 @@ def dup(pkt):
     return
   append(pkt)
 
-  for i in xrange(10):
+  for i in xrange(3):
     send_ACK_in_seq(pkt)
+
 
 
 ### Proper handling for packet with SPLIT attack.
@@ -126,6 +127,7 @@ def split(pkt) :
   
   for ACK_num in get_split_acks(pkt):
     send_ACK(pkt[TCP].ack, ACK_num)
+
 
 
 ### Proper handling for OP attacks.
