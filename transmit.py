@@ -39,7 +39,7 @@ count_SEQ = initialSeq
 ### Sending response after SYN_ACK
 getStr = 'GET / HTTP/1.1\r\n\r\n'
 request = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-                 seq=(syn_ack[TCP].ack), ack=(syn_ack[TCP].seq + 1), flags='FA', nonce="A"*8) / getStr
+                 seq=(syn_ack[TCP].ack), ack=(syn_ack[TCP].seq + 1), flags='FA') / getStr
 socket.send(Ether() / request)
 
 
@@ -50,7 +50,7 @@ socket.send(Ether() / request)
 ### Send ACK with sequence no seq and ack num ack.
 def send_ACK(seq, ack):
   ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
-             seq=seq, ack=ack, flags='A', nonce="A"*8)
+             seq=seq, ack=ack, flags='A')
   socket.send(Ether() / ack_pkt)
 
 ### Send ACK with normal sequence progression.
@@ -91,7 +91,6 @@ def data_len(pkt):
   ip_head_len = pkt.getlayer(IP).ihl * 32 / 8
   tcp_head_len = pkt.getlayer(TCP).dataofs * 32 / 8
   return ip_len - ip_head_len - tcp_head_len
-
 
 
 
