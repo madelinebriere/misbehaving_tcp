@@ -27,6 +27,10 @@ parser.add_argument("--attack",
     "op"],
 	default = "normal")
 
+parser.add_argument("--fix",
+  type=int,
+  default= 0)
+
 args = parser.parse_args()
 
 # Generate simple topology per Experiment 1.
@@ -68,8 +72,8 @@ def launchNet():
 
   # Launch webserver to generate traffic
   server.popen("python webserver.py", shell=True)
-  #client.popen("python %s %s %s" % (args.script, '10.0.0.1', 8888), shell=True).wait()
-  client.popen("python transmit.py %s %s %d" % (args.attack, '10.0.0.1', 8888), shell=True).wait()
+  print args.fix  
+  client.popen("python transmit.py %s %s %d %d" % (args.attack, '10.0.0.1', 8888, args.fix), shell=True).wait()
 
   # Kill webserver
   server.popen("pgrep -f webserver.py | xargs kill -9", shell=True).wait() 
