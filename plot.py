@@ -17,9 +17,11 @@ plt.title("Duplicate ACKs")
 plt.scatter(dupACKs[0][:-5], dupACKs[1][:-5], 
 		label="Duplicate ACKs", color='purple', 
 		marker="+")
+plt.annotate("({},{})".format(round(dupACKs[0][-5], 2), dupACKs[1][-5], 2), xy=(dupACKs[0][-5], dupACKs[1][-5]), xytext=(dupACKs[0][-5]-.5, dupACKs[1][-5]))
 plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green', 
 		marker="+")
+plt.annotate("({},{})".format(round(normalACKs[0][-5], 2), normalACKs[1][-5], 2), xy=(normalACKs[0][-5], normalACKs[1][-5]), xytext=(normalACKs[0][-5]-.5, normalACKs[1][-5]))
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
@@ -31,9 +33,11 @@ plt.title("Split ACKs")
 plt.scatter(splitACKs[0][:-5], splitACKs[1][:-5],
  		label="Split ACKs", color='magenta',
 		marker="+")
+plt.annotate("({},{})".format(round(splitACKs[0][-5], 2), splitACKs[1][-5], 2), xy=(splitACKs[0][-5], splitACKs[1][-5]), xytext=(splitACKs[0][-5]-.5, splitACKs[1][-5]))
 plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green',
 		marker="+")
+plt.annotate("({},{})".format(round(normalACKs[0][-5], 2), normalACKs[1][-5], 2), xy=(normalACKs[0][-5], normalACKs[1][-5]), xytext=(normalACKs[0][-5]-.5, normalACKs[1][-5]))
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
@@ -45,9 +49,11 @@ plt.title("Optimistic ACKs")
 plt.scatter(opACKs[0][:-5], opACKs[1][:-5],
 		 label="Optimistic ACKs", color='blue',
 		 marker="+")
+plt.annotate("({},{})".format(round(opACKs[0][-5], 2), opACKs[1][-5], 2), xy=(opACKs[0][-5], opACKs[1][-5]), xytext=(opACKs[0][-5]-.5, opACKs[1][-5]))
 plt.scatter(normalACKs[0][:-5], normalACKs[1][:-5], 
 		label="Normal", color='green', 
 		marker="+")
+plt.annotate("({},{})".format(round(normalACKs[0][-5], 2), normalACKs[1][-5], 2), xy=(normalACKs[0][-5], normalACKs[1][-5]), xytext=(normalACKs[0][-5]-.5, normalACKs[1][-5]))
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
@@ -60,9 +66,11 @@ plt.title("Optimistic ACKs (Fixed)")
 plt.scatter(opACKs_fix[0][:-5], opACKs_fix[1][:-5],
 		 label="Optimistic ACKs", color='blue',
 		 marker="+")
+plt.annotate("({},{})".format(round(opACKs_fix[0][-5], 2), opACKs_fix[1][-5], 2), xy=(opACKs_fix[0][-5], opACKs_fix[1][-5]), xytext=(opACKs_fix[0][-5]-.5, opACKs_fix[1][-5]))
 plt.scatter(normalACKs_fix[0][:-5], normalACKs_fix[1][:-5], 
 		label="Normal", color='green', 
 		marker="+")
+plt.annotate("({},{})".format(round(normalACKs[0][-5], 2), normalACKs[1][-5], 2), xy=(normalACKs[0][-5], normalACKs[1][-5]), xytext=(normalACKs[0][-5]-.5, normalACKs[1][-5]))
 plt.xlabel("Time (s)")
 plt.ylabel("Sequence Number")
 plt.legend(loc="lower right")
